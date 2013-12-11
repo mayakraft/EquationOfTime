@@ -16,7 +16,7 @@ int day = 343;
 int xOffset = 50;
 
 void setup(){
-  size((int)(WIDTH/2.+xOffset*2),HEIGHT);
+  size((int)(WIDTH+xOffset*2),HEIGHT);
   stroke(0);
   strokeWeight(0); 
   fill(255);  
@@ -35,10 +35,14 @@ void drawYearCurve(){
   float zenith0 = zenith;
   for(int i = 1; i <= segments+1; i++){
     fill(242,229,129);
-    if( (i) % 6 == 1)
-      fill(242,24,129);   
-    if( day > 250 )
-      fill(42,224,29);   
+    if( (i) % 6 == 1){
+      fill(255,40,30);
+      if( day > 250 )
+        //fill(42,24,129);
+      fill(242,229,129);   
+    }
+     
+   
     solarPositionAtLatitude(latitude, longitude, day, (i%12)*jump, minute, 0);
     if(i < segments+1){
       ellipse(xOffset + (azimuth)/720*WIDTH+WIDTH/4., HEIGHT-((zenith)/PI*HEIGHT), SIZE, SIZE);
@@ -48,29 +52,55 @@ void drawYearCurve(){
        zenith0 = zenith;
     }
     else{
-       ellipse(xOffset + (azimuth)/720*WIDTH+WIDTH/4., HEIGHT-((zenith)/PI*HEIGHT), SIZE, SIZE);
+       ellipse(WIDTH+xOffset + (azimuth)/720*WIDTH+WIDTH/4., HEIGHT-((zenith)/PI*HEIGHT), SIZE, SIZE);
      line(xOffset + (180+azimuth0)/720*WIDTH, HEIGHT-((zenith0)/PI*HEIGHT), 
-           xOffset + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT) );
+           WIDTH+xOffset + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT) );
        azimuth0 = azimuth;
        zenith0 = zenith;
     }
   }
 }
+
+void drawAnalemmaCurve(int hr){
+  int d = 0;
+  int segments = 12;
+  int jump = 365/segments;
+  solarPositionAtLatitude(latitude, longitude, d, hr, 0, 0);
+  float azimuth0 = azimuth;
+  float zenith0 = zenith;
+  for(int i = 1; i <= segments+1; i++){
+    solarPositionAtLatitude(latitude, longitude, jump*i, hr, 0, 0);
+    if(i < segments+1){
+      line(xOffset + (180+azimuth0)/720*WIDTH, HEIGHT-((zenith0)/PI*HEIGHT), 
+           xOffset + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT) );
+       azimuth0 = azimuth;
+       zenith0 = zenith;
+    }
+    else{
+     line(xOffset + (180+azimuth0)/720*WIDTH, HEIGHT-((zenith0)/PI*HEIGHT), 
+           WIDTH+xOffset + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT) );
+       azimuth0 = azimuth;
+       zenith0 = zenith;
+    }
+  }
+}
+
 void draw(){
   
 //  update();
   // draw
   background(255);
   strokeWeight(1); 
-  line(0,HEIGHT/2.,WIDTH,HEIGHT/2.);
+  line(0,HEIGHT/2.,WIDTH+xOffset*2,HEIGHT/2.);
   strokeWeight(SIZE*.1);
-//  fill(0);
-
-//  textSize(32);
-//  text(year, 10, 30); 
   
   drawYearCurve();
   
+//  drawAnalemmaCurve(12);
+  fill(0);
+  textSize(32);
+  text(approximateMonth(day), 10, 30); 
+
   day+=2;
   if(day >= 365.25){
     day = 0;
@@ -102,13 +132,13 @@ void solarPositionAtLatitude(float latitude, float longitude, int day, int hour,
     float azimuthRight = (sin(latitude*PI/180.) * cos(zenith) - sin(decl) ) 
                                       /
                       (cos(latitude*PI/180.) * sin(zenith) );
-//    if(hour >= 14 || hour <= 1)
-//      azimuth = 180+acos(-azimuthRight)/PI*360.;
-//    else 
+    if(hour >= 14 || hour <= 1)// && day < 250) //&& (day/2)%6 == 1))
+      azimuth = 180+acos(-azimuthRight)/PI*360.;
+    else 
       azimuth = 180-acos( -azimuthRight )/PI*365.;
       //if( (hour/2.) % 6 == 1)
       if( hour/2. == 1)
-        println(sin(latitude*PI/180.) + " * " + cos(zenith) + " - " +  sin(decl) + " / " + cos(latitude*PI/180.) + " * " +  sin(zenith));
+//        println(day + " " + sin(latitude*PI/180.) + " * " + cos(zenith) + " - " +  sin(decl) + " / " + cos(latitude*PI/180.) + " * " +  sin(zenith));
 //        println(sin(latitude*PI/180.) + " * " + sin(decl) + " + " + cos(latitude*PI/180.) + " * " + cos(decl) + " * " +  cos(ha*PI/180.));
 //      println(hour + "    " + zenithRight + "    " + acos(zenithRight)/PI*360. + "   ::    " + -azimuthRight + "    " + acos(-azimuthRight)/PI*360.);
       
@@ -125,6 +155,26 @@ void solarPositionAtLatitude(float latitude, float longitude, int day, int hour,
 //      println(ha + "        " + tst/4.);
 //      if(hour == 14)
 //        println("ZENITH" + zenithRight + "      AZIMUTH  " + azimuthRight);
+}
+
+String approximateMonth(int day){
+  int approx = (int)(day/30.41666);
+  println(approx);
+  String month;
+  if(approx == 0) month = "January";
+  else if(approx == 1) month = "February";
+  else if(approx == 2) month = "March";
+  else if(approx == 3) month = "April";
+  else if(approx == 4) month = "May";
+  else if(approx == 5) month = "June";
+  else if(approx == 6) month = "July";
+  else if(approx == 7) month = "August";
+  else if(approx == 8) month = "September";
+  else if(approx == 9) month = "October";
+  else if(approx == 10) month = "November";
+  else if(approx == 11) month = "December";
+  else month = "";
+  return month;
 }
 
 void mouseWheel(MouseEvent event) {
