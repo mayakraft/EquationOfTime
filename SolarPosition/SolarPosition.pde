@@ -35,7 +35,7 @@ void drawYearCurve(){
   float zenith0 = zenith;
   for(int i = 1; i <= segments+1; i++){
     fill(242,229,129);
-    if( (i) % 6 == 1){
+    if( (i) % 12 == 1){
       fill(255,40,30);
       if( day > 250 )
         //fill(42,24,129);
@@ -63,12 +63,12 @@ void drawYearCurve(){
 
 void drawAnalemmaCurve(int hr){
   int d = 0;
-  int segments = 12;
+  int segments = 24;
   int jump = 365/segments;
   solarPositionAtLatitude(latitude, longitude, d, hr, 0, 0);
   float azimuth0 = azimuth;
   float zenith0 = zenith;
-  for(int i = 1; i <= segments+1; i++){
+  for(int i = 1; i < segments+1; i++){
     solarPositionAtLatitude(latitude, longitude, jump*i, hr, 0, 0);
     if(i < segments+1){
       line(xOffset + (180+azimuth0)/720*WIDTH, HEIGHT-((zenith0)/PI*HEIGHT), 
@@ -76,46 +76,28 @@ void drawAnalemmaCurve(int hr){
        azimuth0 = azimuth;
        zenith0 = zenith;
     }
-    else{
-     line(xOffset + (180+azimuth0)/720*WIDTH, HEIGHT-((zenith0)/PI*HEIGHT), 
-           WIDTH+xOffset + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT) );
-       azimuth0 = azimuth;
-       zenith0 = zenith;
-    }
   }
 }
 
 void draw(){
-  
 //  update();
-  // draw
   background(255);
   strokeWeight(1); 
   line(0,HEIGHT/2.,WIDTH+xOffset*2,HEIGHT/2.);
   strokeWeight(SIZE*.1);
-  
   drawYearCurve();
-  
-//  drawAnalemmaCurve(12);
+  drawAnalemmaCurve(12);
   fill(0);
   textSize(32);
   text(approximateMonth(day), 10, 30); 
-
   day+=2;
-  if(day >= 365.25){
+  if(day >= 360){
     day = 0;
   }
 //  minute+=3;
 //  if(minute >= 60){
-//    hour++;
-//    minute = 0;
-//    if(hour >= 24) hour = 0;
-//  }
-
-//  fill(colors[3*zindex[i]+0],colors[3*zindex[i]+1],colors[3*zindex[i]+2]);
-//  if(centerX1 - planetsY[zindex[i]]*ZOOM < WIDTH)  // prevent overlap from the 1st screen to the 2nd
-//    ellipse(centerX1 - planetsX[zindex[i]]*ZOOM, centerY1 + planetsY[zindex[i]]*ZOOM, SIZE, SIZE);
-//  ellipse(centerX2 - planetsX[zindex[i]]*ZOOM, centerY2 + planetsZ[zindex[i]]*ZOOM, SIZE, SIZE);
+//    hour++;  minute = 0;
+//    if(hour >= 24) hour = 0;  }
 }
 
 // longitude is in degrees, 
@@ -135,8 +117,10 @@ void solarPositionAtLatitude(float latitude, float longitude, int day, int hour,
     if(hour >= 14 || hour <= 1)// && day < 250) //&& (day/2)%6 == 1))
       azimuth = 180+acos(-azimuthRight)/PI*360.;
     else 
-      azimuth = 180-acos( -azimuthRight )/PI*365.;
-      //if( (hour/2.) % 6 == 1)
+      azimuth = 180-acos( -azimuthRight )/PI*360.;
+    if( (hour/2.) % 6 == 1 && (day < 250 || day > 350) ){
+      azimuth = 180-acos( -azimuthRight )/PI*360.;
+    }
       if( hour/2. == 1)
 //        println(day + " " + sin(latitude*PI/180.) + " * " + cos(zenith) + " - " +  sin(decl) + " / " + cos(latitude*PI/180.) + " * " +  sin(zenith));
 //        println(sin(latitude*PI/180.) + " * " + sin(decl) + " + " + cos(latitude*PI/180.) + " * " + cos(decl) + " * " +  cos(ha*PI/180.));
