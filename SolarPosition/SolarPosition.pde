@@ -4,8 +4,8 @@ int MARGIN = 16;
 int SIZE = 16;  // sun size
 int count = 0;
 
-float longitude = 40;
-float latitude = 30;
+float longitude = -123;
+float latitude = 45;
 int h = 0;
 int m = 0;
 int d = 343;
@@ -14,6 +14,7 @@ float zenith, azimuth;
 // debugging
 int focus = 0;
 boolean goForPrint;
+PImage img;
 
 void setup(){
   size((int)(WIDTH+MARGIN*2),HEIGHT);
@@ -21,15 +22,18 @@ void setup(){
   strokeWeight(0); 
   fill(255);  
   background(255);
+  img = loadImage("earth.png");
 }
 
-void update(){
-  solarPositionAtLatitude(longitude, latitude, d, h, m, 0);
+void setLonLat(float lon, float lat){
+//  println("++++++++++++++ " + lon + "   " + lat );
+  latitude = lat;
+  longitude = lon;
 }
 
 void drawYearCurve(){
   int segments = 12;
-  int jump = 2;
+  int jump = 24.0/segments;
     solarPositionAtLatitude(longitude, latitude, d, 1*jump, m, 0);
   float azimuth0 = azimuth;
   float zenith0 = zenith;
@@ -43,13 +47,6 @@ void drawYearCurve(){
        azimuth0 = azimuth;
        zenith0 = zenith;
     }
-//    else{
-//       ellipse(WIDTH+MARGIN + (azimuth)/720*WIDTH+WIDTH/4., HEIGHT-((zenith)/PI*HEIGHT), SIZE, SIZE);
-//     line(MARGIN + (180+azimuth0)/720*WIDTH, HEIGHT-((zenith0)/PI*HEIGHT), 
-//           WIDTH+MARGIN + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT) );
-//       azimuth0 = azimuth;
-//       zenith0 = zenith;
-//    }
   }
 }
 
@@ -77,11 +74,16 @@ void drawAnalemmaCurve(int hr){
 }
 
 void draw(){
-//  update();
   background(255);
-  strokeWeight(1); 
-  line(0,HEIGHT/2.,WIDTH+MARGIN*2,HEIGHT/2.);
-//  strokeWeight(.5); 
+  if(mousePressed){
+    tint(255, 126);
+    image(img, MARGIN, 0,800,400);
+    tint(255, 255);
+    strokeWeight(3); 
+    line(0,mouseY,WIDTH+MARGIN*2,mouseY);
+    line(mouseX,0,mouseX,HEIGHT);
+  }
+  strokeWeight(1);  
   for(int i = 0; i <= 13; i++){
 //    if(i == focus)
 //      stroke(255,0,0);
@@ -95,11 +97,15 @@ void draw(){
   fill(0);
   textSize(32);
   text(approximateMonth(d), 10, 30); 
-  textSize(14);
-  text("N", WIDTH/4*0+MARGIN, HEIGHT*.5-1); 
-  text("E", WIDTH/4*1+MARGIN, HEIGHT*.5-1); 
-  text("S", WIDTH/4*2+MARGIN, HEIGHT*.5-1); 
-  text("W", WIDTH/4*3+MARGIN, HEIGHT*.5-1); 
+  if(!mousePressed){
+    strokeWeight(1); 
+    line(0,HEIGHT/2.,WIDTH+MARGIN*2,HEIGHT/2.);
+    textSize(14);
+    text("N", WIDTH/4*0+MARGIN, HEIGHT*.5-1); 
+    text("E", WIDTH/4*1+MARGIN, HEIGHT*.5-1); 
+    text("S", WIDTH/4*2+MARGIN, HEIGHT*.5-1); 
+    text("W", WIDTH/4*3+MARGIN, HEIGHT*.5-1); 
+  }
   textSize(20);
   text("φ: " + latitude, WIDTH/4*0+MARGIN, HEIGHT-5); 
   text("λ: " + longitude, WIDTH/4*1+MARGIN, HEIGHT-5); 
@@ -137,28 +143,24 @@ void solarPositionAtLatitude(float longitude, float latitude, int day, int hour,
 //      azimuth = 360+180+acos(-1/azimuthRight + 2)/PI*360.;
 //    }
     
-    if(goForPrint == true){
-      if( hour/2. == focus){
+//    if(goForPrint == true){
+//      if( hour/2. == focus){
 //        println(hour + " " + day + "    " + sin(latitude*PI/180.) + " * " + cos(zenith) + " - " +  sin(decl) + " / " + cos(latitude*PI/180.) + " * " +  sin(zenith) + " ||||| " + (sin(latitude*PI/180.) * cos(zenith) - sin(decl) ) + " / " + (cos(latitude*PI/180.) * sin(zenith) ) + " = " + azimuthRight);
 //        println(sin(latitude*PI/180.) + " * " + sin(decl) + " + " + cos(latitude*PI/180.) + " * " + cos(decl) + " * " +  cos(ha*PI/180.));
-      //println(hour + " " + day + "    " + -azimuthRight + "    " + acos(-azimuthRight)/PI*360. + "   ::    "  + zenithRight + "    " + acos(zenithRight)/PI*360.);
-      
-//      if(count%10 == 0)
-//      {
-//        if(zenithRight < -PI/2. || zenithRight > PI/2.)
-//          println("ZENITH" + zenithRight);
-//        if(azimuthRight < -PI/2. || azimuthRight > PI/2.)
-//          println("AZIMUTH  " + azimuthRight);
-////          println(day + " Azimuth: " + azimuth + "      Zenith: " + zenith);
-//      //    println(day + 
+//        println(hour + " " + day + "    " + -azimuthRight + "    " + acos(-azimuthRight)/PI*360. + "   ::    "  + zenithRight + "    " + acos(zenithRight)/PI*360.);      
+//        goForPrint = false;
 //      }
-        goForPrint = false;
-      }
     }
-//      count++;
-//      println(ha + "        " + tst/4.);
-//      if(hour == 14)
-//        println("ZENITH" + zenithRight + "      AZIMUTH  " + azimuthRight);
+}
+
+void mouseClicked(){
+  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
+//  focus++;
+//  if(focus == 12) focus = 0;
+}
+
+void mouseDragged(){
+  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
 }
 
 String approximateMonth(int day){
@@ -178,26 +180,4 @@ String approximateMonth(int day){
   else if(approx == 11) month = "December";
   else month = "";
   return month;
-}
-
-//void mouseWheel(MouseEvent event) {
-//  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (mouseY-MARGIN)/(float)(WIDTH)*180-90 );
-//}
-
-void mouseClicked(){
-//  focus++;
-//  if(focus == 12)
-//    focus = 0;
-//  println("FOCUS:" + focus);
-  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
-}
-
-void mouseDragged(){
-  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
-}
-
-void setLonLat(float lon, float lat){
-  println("++++++++++++++ " + lon + "   " + lat );
-  latitude = lat;
-  longitude = lon;
 }
