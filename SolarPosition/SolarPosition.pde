@@ -1,26 +1,19 @@
- /* @pjs preload="earthmap.png"; */  
+/* @pjs preload="earthmap.png"; */  
 
 int WIDTH = 800;
 int HEIGHT = 400;
 int MARGIN = 16;
 int SIZE = 16;  // sun size
-int count = 0;
+PImage img;
 
 float longitude = -123;
 float latitude = 45;
-int h = 0;
-int m = 0;
-int d = 343;
+int h, m, d;
 float zenith, azimuth;
-
-// debugging
-int focus = 0;
-PImage img;
-
 
 // longitude is in degrees, 
 void solarPositionAtLatitude(float longitude, float latitude, int day, int hour, int minute, int second){
-    int timezone = 1;
+    int timezone = -(floor(longitude/360.*24)+1);  //timezone from UTC (California = +8)
     float y = 2*PI/365 * (day-1 + (hour-12)/24.);
     float eqtime = 229.18 * (0.000075 + 0.001868*cos(y) - 0.032077*sin(y) - 0.014615*cos(2*y) - 0.040849 * sin(2*y) );
     float decl = 0.006918 - 0.399912*cos(y) + 0.070257 * sin(y) - 0.006758 * cos(2*y) + 0.000907 * sin(2*y) - 0.002697 * cos(3*y) + 0.00148 * sin(3*y);
@@ -32,7 +25,8 @@ void solarPositionAtLatitude(float longitude, float latitude, int day, int hour,
     float top = sin(latitude*PI/180.) * cos(zenith) - sin(decl);
     float bottom = cos(latitude*PI/180.) * sin(zenith);
     float azimuthRight = (top / bottom);
-      azimuth = 180+acos(-azimuthRight)/PI*360.;
+    azimuth = 180+acos(-azimuthRight)/PI*360.;
+//    azimuth = 180-acos(-azimuthRight)/PI*360.;
 }
 
 void setup(){
@@ -56,11 +50,7 @@ void draw(){
   }
   strokeWeight(1);  
   for(int i = 0; i <= 13; i++){
-//    if(i == focus)
-//      stroke(255,0,0);
     drawAnalemmaCurve(i*2);
-    if(i == focus)
-      stroke(0);
   }
   strokeWeight(SIZE*.1);
   drawYearCurve();
