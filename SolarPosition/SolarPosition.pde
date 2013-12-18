@@ -1,3 +1,5 @@
+ /* @pjs preload="earthmap.png"; */  
+
 int WIDTH = 800;
 int HEIGHT = 400;
 int MARGIN = 16;
@@ -13,8 +15,25 @@ float zenith, azimuth;
 
 // debugging
 int focus = 0;
-boolean goForPrint;
 PImage img;
+
+
+// longitude is in degrees, 
+void solarPositionAtLatitude(float longitude, float latitude, int day, int hour, int minute, int second){
+    int timezone = 1;
+    float y = 2*PI/365 * (day-1 + (hour-12)/24.);
+    float eqtime = 229.18 * (0.000075 + 0.001868*cos(y) - 0.032077*sin(y) - 0.014615*cos(2*y) - 0.040849 * sin(2*y) );
+    float decl = 0.006918 - 0.399912*cos(y) + 0.070257 * sin(y) - 0.006758 * cos(2*y) + 0.000907 * sin(2*y) - 0.002697 * cos(3*y) + 0.00148 * sin(3*y);
+    float time_offset = eqtime - 4 * longitude + 60 * timezone;
+    float tst = hour * 60 + minute + second / 60. + time_offset;  // in minutes
+    float ha = tst/4. - 180;
+    float zenithRight = (sin(latitude*PI/180.) * sin(decl) + cos(latitude*PI/180.) * cos(decl) * cos(ha*PI/180.));
+    zenith = acos( zenithRight );
+    float top = sin(latitude*PI/180.) * cos(zenith) - sin(decl);
+    float bottom = cos(latitude*PI/180.) * sin(zenith);
+    float azimuthRight = (top / bottom);
+      azimuth = 180+acos(-azimuthRight)/PI*360.;
+}
 
 void setup(){
   size((int)(WIDTH+MARGIN*2),HEIGHT);
@@ -22,7 +41,60 @@ void setup(){
   strokeWeight(0); 
   fill(255);  
   background(255);
-  img = loadImage("earth.png");
+  img = loadImage("earthmap.png");
+}
+
+void draw(){
+  background(255);
+  if(mousePressed){
+    tint(255, 126);
+    image(img, MARGIN, 0,800,400);
+    tint(255, 255);
+    strokeWeight(3); 
+    line(0,mouseY,WIDTH+MARGIN*2,mouseY);
+    line(mouseX,0,mouseX,HEIGHT);
+  }
+  strokeWeight(1);  
+  for(int i = 0; i <= 13; i++){
+//    if(i == focus)
+//      stroke(255,0,0);
+    drawAnalemmaCurve(i*2);
+    if(i == focus)
+      stroke(0);
+  }
+  strokeWeight(SIZE*.1);
+  drawYearCurve();
+  fill(0);
+  textSize(32);
+  text(approximateMonth(d), 10, 30); 
+  if(!mousePressed){
+    strokeWeight(1); 
+    line(0,HEIGHT/2.,WIDTH+MARGIN*2,HEIGHT/2.);
+    textSize(14);
+    text("N", WIDTH/4*0+MARGIN, HEIGHT*.5-1); 
+    text("E", WIDTH/4*1+MARGIN, HEIGHT*.5-1); 
+    text("S", WIDTH/4*2+MARGIN, HEIGHT*.5-1); 
+    text("W", WIDTH/4*3+MARGIN, HEIGHT*.5-1); 
+  }
+  textSize(20);
+  text("φ: " + latitude, WIDTH/4*0+MARGIN, HEIGHT-5); 
+  text("λ: " + longitude, WIDTH/4*1+MARGIN, HEIGHT-5); 
+  if(!mousePressed){
+    d+=2;
+    if(d >= 360){
+      d = 0;
+    }
+  }
+}
+
+void mouseClicked(){
+  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
+//  focus++;
+//  if(focus == 12) focus = 0;
+}
+
+void mouseDragged(){
+  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
 }
 
 void setLonLat(float lon, float lat){
@@ -33,7 +105,7 @@ void setLonLat(float lon, float lat){
 
 void drawYearCurve(){
   int segments = 12;
-  int jump = 24.0/segments;
+  int jump = (int)(24.0/segments);
     solarPositionAtLatitude(longitude, latitude, d, 1*jump, m, 0);
   float azimuth0 = azimuth;
   float zenith0 = zenith;
@@ -69,98 +141,6 @@ void drawAnalemmaCurve(int hr){
        zenith0 = zenith;
     }
   }
-//    line(MARGIN + (180+azimuth)/720*WIDTH, HEIGHT-((zenith)/PI*HEIGHT), 
-//         MARGIN + (180+firstAzimuth)/720*WIDTH, HEIGHT-((firstZenith)/PI*HEIGHT) );
-}
-
-void draw(){
-  background(255);
-  if(mousePressed){
-    tint(255, 126);
-    image(img, MARGIN, 0,800,400);
-    tint(255, 255);
-    strokeWeight(3); 
-    line(0,mouseY,WIDTH+MARGIN*2,mouseY);
-    line(mouseX,0,mouseX,HEIGHT);
-  }
-  strokeWeight(1);  
-  for(int i = 0; i <= 13; i++){
-//    if(i == focus)
-//      stroke(255,0,0);
-    drawAnalemmaCurve(i*2);
-    if(i == focus)
-      stroke(0);
-  }
-  strokeWeight(SIZE*.1);
-  goForPrint = true;
-  drawYearCurve();
-  fill(0);
-  textSize(32);
-  text(approximateMonth(d), 10, 30); 
-  if(!mousePressed){
-    strokeWeight(1); 
-    line(0,HEIGHT/2.,WIDTH+MARGIN*2,HEIGHT/2.);
-    textSize(14);
-    text("N", WIDTH/4*0+MARGIN, HEIGHT*.5-1); 
-    text("E", WIDTH/4*1+MARGIN, HEIGHT*.5-1); 
-    text("S", WIDTH/4*2+MARGIN, HEIGHT*.5-1); 
-    text("W", WIDTH/4*3+MARGIN, HEIGHT*.5-1); 
-  }
-  textSize(20);
-  text("φ: " + latitude, WIDTH/4*0+MARGIN, HEIGHT-5); 
-  text("λ: " + longitude, WIDTH/4*1+MARGIN, HEIGHT-5); 
-  d+=2;
-  if(d >= 360){
-    d = 0;
-  }
-//  minute+=3;
-//  if(minute >= 60){
-//    hour++;  minute = 0;
-//    if(hour >= 24) hour = 0;  }
-}
-
-// longitude is in degrees, 
-void solarPositionAtLatitude(float longitude, float latitude, int day, int hour, int minute, int second){
-    int timezone = 1;
-    float y = 2*PI/365 * (day-1 + (hour-12)/24.);
-    float eqtime = 229.18 * (0.000075 + 0.001868*cos(y) - 0.032077*sin(y) - 0.014615*cos(2*y) - 0.040849 * sin(2*y) );
-    float decl = 0.006918 - 0.399912*cos(y) + 0.070257 * sin(y) - 0.006758 * cos(2*y) + 0.000907 * sin(2*y) - 0.002697 * cos(3*y) + 0.00148 * sin(3*y);
-    float time_offset = eqtime - 4 * longitude + 60 * timezone;
-    float tst = hour * 60 + minute + second / 60. + time_offset;  // in minutes
-    float ha = tst/4. - 180;
-    float zenithRight = (sin(latitude*PI/180.) * sin(decl) + cos(latitude*PI/180.) * cos(decl) * cos(ha*PI/180.));
-    zenith = acos( zenithRight );
-    float top = sin(latitude*PI/180.) * cos(zenith) - sin(decl);
-    float bottom = cos(latitude*PI/180.) * sin(zenith);
-    float azimuthRight = (top / bottom);
-//    if(hour >= 14 || hour < 2)// && day < 250) //&& (day/2)%6 == 1))
-      azimuth = 180+acos(-azimuthRight)/PI*360.;
-//    else 
-//      azimuth = 180-acos( -azimuthRight )/PI*360.;
-//    if( (hour/2.) % 6 == 1 && (day < 250 || day > 350) )
-//      azimuth = 180-acos( -azimuthRight )/PI*360.;
-//    if( (hour == 10 || hour == 22) && (day > 272 && day < 340) ){
-//      azimuth = 360+180+acos(-1/azimuthRight + 2)/PI*360.;
-//    }
-    
-//    if(goForPrint == true){
-//      if( hour/2. == focus){
-//        println(hour + " " + day + "    " + sin(latitude*PI/180.) + " * " + cos(zenith) + " - " +  sin(decl) + " / " + cos(latitude*PI/180.) + " * " +  sin(zenith) + " ||||| " + (sin(latitude*PI/180.) * cos(zenith) - sin(decl) ) + " / " + (cos(latitude*PI/180.) * sin(zenith) ) + " = " + azimuthRight);
-//        println(sin(latitude*PI/180.) + " * " + sin(decl) + " + " + cos(latitude*PI/180.) + " * " + cos(decl) + " * " +  cos(ha*PI/180.));
-//        println(hour + " " + day + "    " + -azimuthRight + "    " + acos(-azimuthRight)/PI*360. + "   ::    "  + zenithRight + "    " + acos(zenithRight)/PI*360.);      
-//        goForPrint = false;
-//      }
-    }
-}
-
-void mouseClicked(){
-  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
-//  focus++;
-//  if(focus == 12) focus = 0;
-}
-
-void mouseDragged(){
-  setLonLat( (mouseX-MARGIN)/(float)(WIDTH)*360-180, (1-(mouseY)/(float)(HEIGHT))*180-90 );
 }
 
 String approximateMonth(int day){
